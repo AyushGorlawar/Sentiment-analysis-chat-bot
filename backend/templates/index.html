@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Chatbot</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <script type="module" src="static/js/script.js"></script>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="https://cdn.discordapp.com/avatars/1154003600528396339/6eefbfff14d162401ca0b2fc534ff95a.png?size=1024"
+                alt="Bot">
+            <h3>Sentiment Bot</h3>
+            <div class="toggle-container">
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="chat-box" id="chat-box">
+            <div class="bot-message">Hello! How are you feeling today?</div>
+        </div>
+
+        <div class="typing-indicator" id="typing-indicator" style="display: none;">
+            <span>Sentiment Bot is typing</span>
+            <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            <button id="voice-button"><i class="fas fa-microphone"></i></button>
+        </div>
+
+        <div class="chat-controls">
+            <button id="clear-button">➕ New Chat</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCNyxzc2XveqKw3k2DdFwhZbU5qNCJLHQk",
+            authDomain: "sentimentbot-b3b65.firebaseapp.com",
+            projectId: "sentimentbot-b3b65",
+            storageBucket: "sentimentbot-b3b65.firebasestorage.app",
+            messagingSenderId: "160282828465",
+            appId: "1:160282828465:web:2638cafc4d6a1b453f4c90"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const chatCollection = collection(db, "chat_history");
+
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+        const typingIndicator = document.getElementById("typing-indicator");
+        const clearButton = document.getElementById("clear-button");
+
+        async function loadChatHistory() {
+            const q = query(chatCollection, orderBy("timestamp", "asc"));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                const msgData = doc.data();
+                let messageDiv = document.createElement("div");
+                messageDiv.className = msgData.sender === "bot" ? "bot-message" : "user-message";
+                messageDiv.innerText = msgData.message;
+                chatBox.appendChild(messageDiv);
+            });
+        }
+
+        async function saveMessageToFirebase(sender, message) {
+            await addDoc(chatCollection, {
+                sender: sender,
+                message: message,
+                timestamp: new Date()
+            });
+        }
+
+        async function sendMessage() {
+            let userText = userInput.value.trim();
+            if (!userText) return;
+
+            let userMessageDiv = document.createElement("div");
+            userMessageDiv.className = "user-message";
+            userMessageDiv.innerText = userText;
+            chatBox.appendChild(userMessageDiv);
+
+            saveMessageToFirebase("user", userText);
+            userInput.value = "";
+
+            typingIndicator.style.display = "block";
+
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userText })
+            });
+
+            const data = await response.json();
+            typingIndicator.style.display = "none";
+
+            let botMessageDiv = document.createElement("div");
+            botMessageDiv.className = "bot-message";
+            botMessageDiv.innerText = data.response;
+            chatBox.appendChild(botMessageDiv);
+
+            saveMessageToFirebase("bot", data.response);
+        }
+
+        sendButton.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", (event) => {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        clearButton.addEventListener("click", () => {
+            chatBox.innerHTML = `<div class="bot-message">Hello! How are you feeling today?</div>`;
+        });
+
+        loadChatHistory();
+    </script>
+</body>
+
+</html>
