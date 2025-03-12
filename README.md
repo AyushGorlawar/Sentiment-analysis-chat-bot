@@ -62,7 +62,7 @@ python backend/app.py
 ### **📷 Screenshots**  
 | Light Mode  | Dark Mode  |
 |------------|------------|
-| ![Light](static/screenshots/light.png) | ![Dark](static/screenshots/dark.png) |
+| ![Light](https://github.com/AyushGorlawar/Sentiment-analysis-chat-bot/blob/main/backend/static/light.png) | ![Dark](https://github.com/AyushGorlawar/Sentiment-analysis-chat-bot/blob/main/backend/static/dark.png) |
 
 ---
 
