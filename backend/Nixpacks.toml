@@ -1,0 +1,5 @@
+[build]
+buildCommand = "pip install -r requirements.txt"
+
+[start]
+startCommand = "python backend/app.py"
