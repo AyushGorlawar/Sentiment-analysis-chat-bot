@@ -1,1 +1,5 @@
-web: python backend/app.py
+[build]
+buildCommand = "pip install -r requirements.txt"
+
+[start]
+startCommand = "python backend/app.py"
